@@ -5,7 +5,7 @@ import { postInputDtoValidation } from '../validation/postInputDtoValidation';
 import { Request, Response } from 'express';
 import { blogsRepository } from '../../blogs/repositories/blogs.repository';
 
-export const PostHasValidFIeldsMiddleware = (
+export const PostHasValidFIeldsMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -18,7 +18,7 @@ export const PostHasValidFIeldsMiddleware = (
   }
 
   // validate blog exists and get data
-  const blog = blogsRepository.findById(req.body.blogId);
+  const blog = await blogsRepository.findById(req.body.blogId);
   if (!blog) {
     res
       .status(HttpStatus.BadRequest)

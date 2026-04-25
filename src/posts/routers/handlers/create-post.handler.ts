@@ -11,22 +11,22 @@ export async function createPostHandler(
   res: Response,
 ) {
   try {
-    let existingBlog = await blogsRepository.findById(req.body.blogId);
+    const existingBlog = await blogsRepository.findById(req.body.blogId);
     if (!existingBlog) {
       res.sendStatus(HttpStatus.InternalServerError);
+      return;
     }
 
-    const newDriver: Post = {
+    const newPost: Omit<Post, 'id'> = {
       title: req.body.title,
       shortDescription: req.body.shortDescription,
       content: req.body.content,
       blogId: req.body.blogId,
-      blogName: existingBlog?.name ?? '',
-      id: req.body.title,
+      blogName: existingBlog.name,
       createdAt: new Date().toString(),
     };
 
-    const createdPost = await postsRepository.create(newDriver);
+    const createdPost = await postsRepository.create(newPost);
     const postViewModel = mapToPostViewModel(createdPost);
     res.status(HttpStatus.Created).send(postViewModel);
   } catch (e: unknown) {

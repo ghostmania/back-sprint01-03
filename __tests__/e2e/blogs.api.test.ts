@@ -1,12 +1,15 @@
 import express from 'express';
 import request from 'supertest';
 import { HttpStatus } from '../../src/core/types/http-statuses';
+import { SETTINGS } from '../../src/core/settings/settings';
+import { client, runDB } from '../../src/db/mongo.db';
 import { setupApp } from '../../src/setup-app';
 
 describe('Blogs API', () => {
   const app = express();
   setupApp(app);
   const adminAuthHeader = `Basic ${Buffer.from('admin:qwerty').toString('base64')}`;
+  const nonExistingId = '507f1f77bcf86cd799439011';
 
   const validBlogInput = {
     name: 'Code Notes',
@@ -38,8 +41,18 @@ describe('Blogs API', () => {
     return response.body;
   };
 
+  beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+  });
+
   beforeEach(async () => {
     await request(app).delete('/testing/all-data').expect(HttpStatus.NoContent);
+  });
+
+  afterAll(async () => {
+    if (client) {
+      await client.close();
+    }
   });
 
   it('should create blog with valid data; POST /blogs', async () => {
@@ -165,7 +178,7 @@ describe('Blogs API', () => {
 
   it('should return 404 when blog does not exist; GET /blogs/:id', async () => {
     const response = await request(app)
-      .get('/blogs/999')
+      .get(`/blogs/${nonExistingId}`)
       .expect(HttpStatus.NotFound);
 
     expect(response.body).toEqual({
@@ -260,7 +273,7 @@ describe('Blogs API', () => {
 
   it('should return 404 when trying to update non-existing blog; PUT /blogs/:id', async () => {
     const response = await request(app)
-      .put('/blogs/999')
+      .put(`/blogs/${nonExistingId}`)
       .set('Authorization', adminAuthHeader)
       .send(validBlogInput)
       .expect(HttpStatus.NotFound);
@@ -294,7 +307,7 @@ describe('Blogs API', () => {
 
   it('should return 404 when trying to delete non-existing blog; DELETE /blogs/:id', async () => {
     const response = await request(app)
-      .delete('/blogs/999')
+      .delete(`/blogs/${nonExistingId}`)
       .set('Authorization', adminAuthHeader)
       .expect(HttpStatus.NotFound);
 

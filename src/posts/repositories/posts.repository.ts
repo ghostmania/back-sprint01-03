@@ -4,15 +4,15 @@ import { Post } from '../types/post';
 import { PostInputDto } from '../dto/post.input-dto';
 
 export const postsRepository = {
-  async findAll(): Promise<WithId<Post>[]> {
+  async findAll(): Promise<WithId<Omit<Post, 'id'>>[]> {
     return postsCollection.find().toArray();
   },
 
-  async findById(id: string): Promise<WithId<Post> | null> {
+  async findById(id: string): Promise<WithId<Omit<Post, 'id'>> | null> {
     return postsCollection.findOne({ _id: new ObjectId(id) });
   },
 
-  async create(newPost: Post): Promise<WithId<Post>> {
+  async create(newPost: Omit<Post, 'id'>): Promise<WithId<Omit<Post, 'id'>>> {
     const insertResult = await postsCollection.insertOne(newPost);
     return { ...newPost, _id: insertResult.insertedId };
   },
@@ -28,6 +28,7 @@ export const postsRepository = {
           shortDescription: dto.shortDescription,
           content: dto.content,
           blogId: dto.blogId,
+          blogName: dto.blogName,
         },
       },
     );

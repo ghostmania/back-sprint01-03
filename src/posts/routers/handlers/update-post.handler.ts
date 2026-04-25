@@ -9,10 +9,10 @@ export async function updatePostHandler(req: Request, res: Response) {
   // const index = db.posts.findIndex((v) => v.id === id);
 
   // const post = db.posts[index];
-  const post = await postsRepository.findById(id);
+  // const post = await postsRepository.findById(id);
 
   // const blog = blogsDb.blogs.find((item) => item.id === req.body.blogId);
-  const blog = blogsRepository.findById(req.body.blogId);
+  const blog = await blogsRepository.findById(req.body.blogId);
   if (!blog) {
     res
       .status(HttpStatus.BadRequest)
@@ -29,6 +29,7 @@ export async function updatePostHandler(req: Request, res: Response) {
     shortDescription: req.body.shortDescription,
     content: req.body.content,
     blogId: req.body.blogId,
+    blogName: blog.name,
   });
 
   res.sendStatus(HttpStatus.NoContent);

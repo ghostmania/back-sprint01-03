@@ -1,6 +1,8 @@
 import express from 'express';
 import request from 'supertest';
 import { HttpStatus } from '../../src/core/types/http-statuses';
+import { SETTINGS } from '../../src/core/settings/settings';
+import { client, runDB } from '../../src/db/mongo.db';
 import { setupApp } from '../../src/setup-app';
 
 describe('Auth test', () => {
@@ -15,6 +17,10 @@ describe('Auth test', () => {
     description: 'Blog created for homework e2e checks',
     websiteUrl: 'https://homework-blog.dev',
   };
+
+  beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+  });
 
   const expectPostShape = (post: {
     id: string;
@@ -61,6 +67,12 @@ describe('Auth test', () => {
 
   beforeEach(async () => {
     await request(app).delete('/testing/all-data').expect(HttpStatus.NoContent);
+  });
+
+  afterAll(async () => {
+    if (client) {
+      await client.close();
+    }
   });
 
   describe('Blogs api', () => {

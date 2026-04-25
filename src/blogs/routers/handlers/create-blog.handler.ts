@@ -10,8 +10,8 @@ export async function createBlogHandler(
   res: Response,
 ) {
   try {
-    const newBlog: Blog = {
-      id: req.body.name,
+    const newBlog: Omit<Blog, 'id'> = {
+      // id: req.body.name,
       name: req.body.name,
       description: req.body.description,
       websiteUrl: req.body.websiteUrl,

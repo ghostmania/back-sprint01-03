@@ -1,12 +1,15 @@
 import express from 'express';
 import request from 'supertest';
 import { HttpStatus } from '../../src/core/types/http-statuses';
+import { SETTINGS } from '../../src/core/settings/settings';
+import { client, runDB } from '../../src/db/mongo.db';
 import { setupApp } from '../../src/setup-app';
 
 describe('Posts API', () => {
   const app = express();
   setupApp(app);
   const adminAuthHeader = `Basic ${Buffer.from('admin:qwerty').toString('base64')}`;
+  const nonExistingId = '507f1f77bcf86cd799439011';
 
   const validBlogInput = {
     name: 'Platform Notes',
@@ -57,8 +60,18 @@ describe('Posts API', () => {
     return response.body;
   };
 
+  beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+  });
+
   beforeEach(async () => {
     await request(app).delete('/testing/all-data').expect(HttpStatus.NoContent);
+  });
+
+  afterAll(async () => {
+    if (client) {
+      await client.close();
+    }
   });
 
   it('should create post with valid data; POST /posts', async () => {
@@ -159,7 +172,7 @@ describe('Posts API', () => {
         title: 'First post',
         shortDescription: 'Introductory backend post',
         content: 'A longer text about backend APIs',
-        blogId: '999',
+        blogId: nonExistingId,
       })
       .expect(HttpStatus.BadRequest);
 
@@ -270,7 +283,7 @@ describe('Posts API', () => {
 
   it('should return 404 when post does not exist; GET /posts/:id', async () => {
     const response = await request(app)
-      .get('/posts/999')
+      .get(`/posts/${nonExistingId}`)
       .expect(HttpStatus.NotFound);
 
     expect(response.body).toEqual({
@@ -373,7 +386,7 @@ describe('Posts API', () => {
     const blog = await createBlog();
 
     const response = await request(app)
-      .put('/posts/999')
+      .put(`/posts/${nonExistingId}`)
       .set('Authorization', adminAuthHeader)
       .send({
         title: 'First post',
@@ -412,7 +425,7 @@ describe('Posts API', () => {
 
   it('should return 404 when trying to delete non-existing post; DELETE /posts/:id', async () => {
     const response = await request(app)
-      .delete('/posts/999')
+      .delete(`/posts/${nonExistingId}`)
       .set('Authorization', adminAuthHeader)
       .expect(HttpStatus.NotFound);
 
